@@ -20,17 +20,17 @@ CREATE TABLE task (
     province_code INT NOT NULL, -- Código de provincia según INE (dos primeros dígitos del CP)
     status ENUM('B', 'P', 'R', 'C') DEFAULT 'B', -- Estado de la tarea (B: Esperando aprobación, P: Pendiente, R: Realizada, C: Cancelada)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Fecha de creación de la tarea
+    finished_at DATE, -- Fecha en la que se realizará la tarea
     assigned_worker VARCHAR(100) NOT NULL, -- Nombre o ID del operario encargado
-    completion_date DATE, -- Fecha en la que se realizará la tarea
     pre_notes TEXT, -- Anotaciones antes de comenzar el trabajo
     post_notes TEXT, -- Anotaciones realizadas después del trabajo
     sumary_file VARCHAR(255) -- Ruta al fichero resumen del trabajo
+    img_file VARCHAR(255) NOT NULL, -- Ruta de la foto almacenada en el servidor
 );
 
 CREATE TABLE task_photos (
     photo_id INT AUTO_INCREMENT PRIMARY KEY,
     task_id INT NOT NULL,
     photo_path VARCHAR(255) NOT NULL, -- Nombre del foto almacenada en el servidor
-    photo_path VARCHAR(255) NOT NULL, -- Ruta de la foto almacenada en el servidor
     FOREIGN KEY (task_id) REFERENCES task(task_id) ON DELETE CASCADE -- Eliminar las fotos si se elimina la tarea
 );

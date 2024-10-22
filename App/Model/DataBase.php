@@ -47,7 +47,11 @@ class DataBase {
             $fields = ["*"];
         }
 
-        $fields = implode(", ", $fields);
+        $validFields = array_filter($fields, function($field) {
+            return is_string($field) && !is_numeric($field);
+        });
+
+        $fields = implode(", ", $validFields);
 
         $this->query = "SELECT " . $fields . " FROM " . $this->table;
         $this->selectExecuted = true;  
@@ -91,7 +95,7 @@ class DataBase {
     public function and($condition = "", $params = []) {
         if (!$this->whereExecuted) {
             throw new Exception("You must call where() before calling and().");
-            $this->logError("Execution error: " . $e->getMessage());
+            $this->logError("Execution error: " . $e->getMessage())."\n";
         }
 
         // Si no se pasan parámetros, asumimos que la condición incluye los valores directamente
@@ -133,7 +137,7 @@ class DataBase {
             $stmt->execute($params);
             return $stmt;
         } catch (PDOException $e) {
-            $this->logError("Execution error: " . $e->getMessage());
+            $this->logError("Execution error: " . $e->getMessage()."\n");
             throw new Exception("Execution error: " . $e->getMessage());
         }
     }
@@ -166,7 +170,7 @@ class DataBase {
             $this->reset();
             return $this->connection->lastInsertId();  
         } catch (PDOException $e) {
-            $this->logError("Insert error: " . $e->getMessage());
+            $this->logError("Insert error: " . $e->getMessage())."\n";
         throw new Exception("Insert error: " . $e->getMessage());
         }
     }
@@ -202,7 +206,7 @@ class DataBase {
             $this->reset();
             return true;
         } catch (PDOException $e) {
-            throw new Exception("Update error: " . $e->getMessage());
+            throw new Exception("Update error: " . $e->getMessage())."\n";
             $this->logError("Update error: " . $e->getMessage());
 
         }
@@ -215,7 +219,7 @@ class DataBase {
     }
 
     // Ejecutar el delete con los parámetros
-    private function executeDelete($query = "", $params = []) {
+    public function executeDelete($query = "", $params = []) {
         try {
             $stmt = $this->connection->prepare($query);
             if ($stmt === false) {
@@ -226,7 +230,7 @@ class DataBase {
             $this->reset();
             return true;
         } catch (PDOException $e) {
-            $this->logError("Delete error: " . $e->getMessage());
+            $this->logError("Delete error: " . $e->getMessage()."\n");
             throw new Exception("Delete error: " . $e->getMessage());
         }
     }
@@ -242,7 +246,7 @@ class DataBase {
     }
 
     private function logError($message) {
-        error_log($message, 3,  ROOT_PATH.'Logs/file.log');
+        error_log($message, 3,  ROOT_PATH.'Logs/dataBaseError.log');
     }
 
     public function beginTransaction() {

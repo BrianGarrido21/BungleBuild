@@ -18,6 +18,7 @@ class TaskModel{
     private $pre_notes;
     private $post_notes;
     private $sumary_file;
+    private $img_file;
 
     public function __construct($data) {
         $this->task_id = $data['task_id'];
@@ -37,9 +38,8 @@ class TaskModel{
         $this->pre_notes = $data['pre_notes'];
         $this->post_notes = $data['post_notes'];
         $this->sumary_file = $data['sumary_file'];
+        $this->img_file = $data['img_file'];
     }
-
-
 
     // Métodos getters para acceder a los datos de la tarea
     public function getTaskId() {
