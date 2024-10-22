@@ -1,12 +1,21 @@
-<?php require "config.php" ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo class_exists($class_name) ? $class_name : 'BungleBuild Masonry'; ?></title>
-</head>
-<body>
-    <?php include 'view/add_task.php' ?>
-</body>
-</html>
+<?php
+require "config.php";
+
+$data = DataBase::getInstance();
+
+
+$data->setTable('users');
+
+
+$results = $data->select('name','rol','created_at','user_id')->where('user_id = "1"')->and('rol = "administrative"')->get();
+
+/*
+if ($results) {
+
+    print_r($results);
+} else {
+    echo "No se encontraron resultados.";
+}
+*/
+
+include "View/add_user.php";

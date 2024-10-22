@@ -1,8 +1,6 @@
 <?php 
 
-class TaskModel extends DataBase {
-    private static $instance = null;
-
+class TaskModel{
     private $task_id;
     private $nif;
     private $contact_name;
@@ -21,22 +19,7 @@ class TaskModel extends DataBase {
     private $post_notes;
     private $sumary_file;
 
-    private function __construct() {
-        parent::__construct();
-        $this->table = "task";
-    }
-
-    // Método estático que controla la única instancia (Singleton)
-    public static function getInstance() {
-        if (self::$instance === null) {
-            self::$instance = new self(); 
-        }
-        return self::$instance;
-    }
-
-
-    // Método para cargar datos de la tarea en el modelo (interno)
-    private function loadTaskData($data) {
+    public function __construct($data) {
         $this->task_id = $data['task_id'];
         $this->nif = $data['nif'];
         $this->contact_name = $data['contact_name'];
@@ -56,41 +39,7 @@ class TaskModel extends DataBase {
         $this->sumary_file = $data['sumary_file'];
     }
 
-    // Crear nueva tarea
-    public function createTask($data) {
-        return $this->insert($data);
-    }
 
-    // Obtener una tarea por su ID
-    public function getTaskById($task_id) {
-        $result = $this->select()->where("task_id = ?", [$task_id])->get();
-
-        if ($result) {
-            $this->loadTaskData($result[0]);
-            return $this; // Retorna el objeto del mismo TaskModel con los datos cargados
-        }
-        return null;
-    }
-
-    // Obtener una tarea por su NIF
-    public function getTaskByNif($nif) {
-        $result = $this->select("*")->where("nif = $nif")->get();
-        if ($result) {
-            $this->loadTaskData($result[0]);
-            return $this; // Retorna el objeto del mismo TaskModel con los datos cargados
-        }
-        return null;
-    }
-
-    // Actualizar una tarea por su ID
-    public function updateTask($task_id, $data) {
-        return $this->update($data)->where("task_id = ?", [$task_id])->executeUpdate($this->query, $this->params);
-    }
-
-    // Eliminar una tarea por su ID
-    public function deleteTask($task_id) {
-        return $this->delete()->where("task_id = ?", [$task_id])->executeDelete($this->query, $this->params);
-    }
 
     // Métodos getters para acceder a los datos de la tarea
     public function getTaskId() {

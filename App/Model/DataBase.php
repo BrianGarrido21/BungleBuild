@@ -1,17 +1,18 @@
 <?php
-
 class DataBase {
-    protected $connection = null;
-    protected $query = "";
-    protected $table = "";
-    protected $selectExecuted = false;
-    protected $whereExecuted = false;
-    protected $insertExecuted = false;
-    protected $updateExecuted = false;
-    protected $deleteExecuted = false;
-    protected $params = []; 
+    private static $instance = null;
+    private $connection = null;
+    private $query = "";
+    private $table = "";
+    private $selectExecuted = false;
+    private $whereExecuted = false;
+    private $insertExecuted = false;
+    private $updateExecuted = false;
+    private $deleteExecuted = false;
+    private $params = [];
 
-    protected function __construct() {
+    // Constructor privado para evitar múltiples instancias
+    private function __construct() {
         try {
             $this->connection = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASSWORD);
             $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -20,8 +21,28 @@ class DataBase {
         }
     }
 
+    // Método estático para obtener la instancia única
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance; 
+    }
+
+    public function setTable($table) {
+        // Asignar el nombre de la tabla a la propiedad table
+        $this->table = $table;
+        return $this;  // Retornamos $this para permitir el encadenamiento de métodos
+    }
+
+    // Evitar que la clase sea clonada
+    public function __clone() { }
+
+    // Evitar que la clase sea deserializada
+    public function __wakeup() { }
+
     // Método select
-    protected function select(...$fields) {
+    public function select(...$fields) {
         if (empty($fields)) {
             $fields = ["*"];
         }
@@ -34,28 +55,43 @@ class DataBase {
     }
 
     // Método where (acepta tanto condiciones directas como con placeholders)
-    protected function where($condition = "", $params = []) {
+    public function where($condition = "", $params = []) {
+        // Verificar si se ha ejecutado select(), insert(), update() o delete() antes de aplicar where
         if (!$this->selectExecuted && !$this->insertExecuted && !$this->updateExecuted && !$this->deleteExecuted) {
-            throw new Exception("You must call select() or insert() before calling where().");
+            throw new Exception("You must call select(), insert(), update(), or delete() before calling where().");
         }
-
-        // Si no se pasan parámetros, asumimos que la condición incluye los valores directamente
-        if (empty($params)) {
+    
+        // Si se pasan parámetros, asumimos que se usan placeholders, lo que es seguro
+        if (!empty($params)) {
             $this->query .= " WHERE " . $condition;
+            $this->params = array_merge($this->params, $params);
         } else {
-            // Si hay parametros, los usamos como placeholders
+            // Si no hay parámetros, validamos que la condición no tenga SQL peligroso
+            if ($this->containsDangerousSql($condition)) {
+                throw new Exception("Invalid SQL in WHERE clause");
+            }
             $this->query .= " WHERE " . $condition;
-            $this->params = array_merge($this->params, $params);  // Guardamos los parámetros
         }
-
+    
         $this->whereExecuted = true;
-        return $this;  
+        return $this;
+    }
+    
+    public function containsDangerousSql($input) {
+        $dangerousKeywords = ['DROP', 'TRUNCATE', 'DELETE', 'UPDATE'];
+        foreach ($dangerousKeywords as $keyword) {
+            if (stripos($input, $keyword) !== false) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Método and (acepta tanto condiciones directas como con placeholders)
-    protected function and($condition = "", $params = []) {
+    public function and($condition = "", $params = []) {
         if (!$this->whereExecuted) {
             throw new Exception("You must call where() before calling and().");
+            $this->logError("Execution error: " . $e->getMessage());
         }
 
         // Si no se pasan parámetros, asumimos que la condición incluye los valores directamente
@@ -71,7 +107,7 @@ class DataBase {
     }
 
     // Método get para obtener los resultados
-    protected function get($params = []) {
+    public function get($params = []) {
         try {
             // Usamos los parámetros almacenados si no se pasan a get()
             $params = empty($params) ? $this->params : $params;
@@ -87,26 +123,23 @@ class DataBase {
     }
 
     // Ejecutar la consulta preparada con los parámetros
-    protected function executeStatement($query = "", $params = []) {
+    
+    private function executeStatement($query = "", $params = []) {
         try {
             $stmt = $this->connection->prepare($query);
             if ($stmt === false) {
                 throw new Exception("Unable to prepare statement: " . $query);
             }
-
-
             $stmt->execute($params);
-            
             return $stmt;
         } catch (PDOException $e) {
+            $this->logError("Execution error: " . $e->getMessage());
             throw new Exception("Execution error: " . $e->getMessage());
         }
     }
 
-    // ------------------------------------------------------------------------------------
-
     // Método insert
-    protected function insert($data = []) {
+    public function insert($data = []) {
         if (empty($data)) {
             throw new Exception("Insert data cannot be empty.");
         }
@@ -123,7 +156,7 @@ class DataBase {
     }
 
     // Ejecutar el insert con parámetros
-    protected function executeInsert($query = "", $params = []) {
+    private function executeInsert($query = "", $params = []) {
         try {
             $stmt = $this->connection->prepare($query);
             if ($stmt === false) {
@@ -133,14 +166,13 @@ class DataBase {
             $this->reset();
             return $this->connection->lastInsertId();  
         } catch (PDOException $e) {
-            throw new Exception("Insert error: " . $e->getMessage());
+            $this->logError("Insert error: " . $e->getMessage());
+        throw new Exception("Insert error: " . $e->getMessage());
         }
     }
 
-     // ------------------------------------------------------------------------------------
-
     // Método update (acepta tanto datos directos como con placeholders)
-    protected function update($data = []) {
+    public function update($data = []) {
         if (empty($data)) {
             throw new Exception("Update data cannot be empty.");
         }
@@ -160,7 +192,7 @@ class DataBase {
     }
 
     // Ejecutar el update con parámetros
-    protected function executeUpdate($query = "", $params = []) {
+    public function executeUpdate($query = "", $params = []) {
         try {
             $stmt = $this->connection->prepare($query);
             if ($stmt === false) {
@@ -171,39 +203,36 @@ class DataBase {
             return true;
         } catch (PDOException $e) {
             throw new Exception("Update error: " . $e->getMessage());
+            $this->logError("Update error: " . $e->getMessage());
+
         }
     }
 
-    // ------------------------------------------------------------------------------------
-
-
-    protected function delete() {
-    
+    // Método delete
+    public function delete() {
         $this->query = "DELETE FROM " . $this->table . " " . $this->query;  // Usamos el query ya construido (con where)
-        
         return $this;
     }
-    
+
     // Ejecutar el delete con los parámetros
-    protected function executeDelete($query = "", $params = []) {
+    private function executeDelete($query = "", $params = []) {
         try {
             $stmt = $this->connection->prepare($query);
             if ($stmt === false) {
                 throw new Exception("Unable to prepare delete statement: " . $query);
             }
-    
+
             $stmt->execute($params);
             $this->reset();
             return true;
         } catch (PDOException $e) {
+            $this->logError("Delete error: " . $e->getMessage());
             throw new Exception("Delete error: " . $e->getMessage());
         }
     }
 
-    // ------------------------------------------------------------------------------------
-
     // Resetear el estado de la consulta
-    protected function reset() {
+    private function reset() {
         $this->query = "";  
         $this->selectExecuted = false;
         $this->whereExecuted = false;
@@ -211,5 +240,24 @@ class DataBase {
         $this->params = []; 
         $this->updateExecuted = false;
     }
-}
 
+    private function logError($message) {
+        error_log($message, 3,  ROOT_PATH.'Logs/file.log');
+    }
+
+    public function beginTransaction() {
+        $this->connection->beginTransaction();
+    }
+    
+    public function commit() {
+        $this->connection->commit();
+    }
+    
+    public function rollBack() {
+        $this->connection->rollBack();
+    }
+
+    public function escapeIdentifier($identifier) {
+        return "`" . str_replace("`", "``", $identifier) . "`";
+    }
+}
