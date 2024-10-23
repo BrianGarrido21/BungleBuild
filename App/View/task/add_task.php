@@ -44,7 +44,7 @@
 
     <label for="province">Province:</label>
     <select id="province" name="province">
-        <!-- Opciones de provincia aquí -->
+        <!-- Opciones de provincia aquí API -->
     </select><br>
     <?php if ($_POST && $errorHandler->hasError('province')) echo $errorHandler->getFormattedError('province'); ?>
     <br>

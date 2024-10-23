@@ -1,5 +1,5 @@
 <?php
-class DataBase {
+class Database {
     private static $instance = null;
     private $connection = null;
     private $query = "";
@@ -73,6 +73,7 @@ class DataBase {
             // Si no hay parámetros, validamos que la condición no tenga SQL peligroso
             if ($this->containsDangerousSql($condition)) {
                 throw new Exception("Invalid SQL in WHERE clause");
+                
             }
             $this->query .= " WHERE " . $condition;
         }
@@ -95,7 +96,6 @@ class DataBase {
     public function and($condition = "", $params = []) {
         if (!$this->whereExecuted) {
             throw new Exception("You must call where() before calling and().");
-            $this->logError("Execution error: " . $e->getMessage())."\n";
         }
 
         // Si no se pasan parámetros, asumimos que la condición incluye los valores directamente
@@ -112,18 +112,43 @@ class DataBase {
 
     // Método get para obtener los resultados
     public function get($params = []) {
-        try {
-            // Usamos los parámetros almacenados si no se pasan a get()
-            $params = empty($params) ? $this->params : $params;
+        if (!$this->selectExecuted){
+            throw new Exception("You must call select()");
+        }else{
+            try {
+                // Usamos los parámetros almacenados si no se pasan a get()
+                $params = empty($params) ? $this->params : $params;
 
-            $stmt = $this->executeStatement($this->query, $params);
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $this->reset();
-            return $result;
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage());
+                $stmt = $this->executeStatement($this->query, $params);
+                $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $this->reset();
+                return $result;
+            } catch (Exception $e) {
+                throw new Exception($e->getMessage());
+            }
+            return false;
         }
-        return false;
+    }
+
+    // Metodo limit para limitar los resultados de database
+    
+    public function limit($limit, $offset = 0) {
+        if (!$this->selectExecuted){
+            throw new Exception("You must call select()");
+        }else{
+        // Validar los valores de limit y offset como enteros
+        $limit = intval($limit);
+        $offset = intval($offset);
+    
+        // Añadimos el LIMIT y OFFSET a la consulta
+        $this->query .= " LIMIT :limit OFFSET :offset";
+    
+        // Guardamos los parámetros limit y offset
+        $this->params['limit'] = $limit;
+        $this->params['offset'] = $offset;
+    
+        return $this;
+        }
     }
 
     // Ejecutar la consulta preparada con los parámetros
@@ -195,35 +220,19 @@ class DataBase {
         return $this;
     }
 
-    // Ejecutar el update con parámetros
-    public function executeUpdate($query = "", $params = []) {
-        try {
-            $stmt = $this->connection->prepare($query);
-            if ($stmt === false) {
-                throw new Exception("Unable to prepare update statement: " . $query);
-            }
-            $stmt->execute($params);
-            $this->reset();
-            return true;
-        } catch (PDOException $e) {
-            throw new Exception("Update error: " . $e->getMessage())."\n";
-            $this->logError("Update error: " . $e->getMessage());
-
-        }
-    }
 
     // Método delete
     public function delete() {
-        $this->query = "DELETE FROM " . $this->table . " " . $this->query;  // Usamos el query ya construido (con where)
+        $this->query = "DELETE FROM " . $this->table . " ";  // Usamos el query ya construido (con where)
         return $this;
     }
 
     // Ejecutar el delete con los parámetros
-    public function executeDelete($query = "", $params = []) {
+    public function execute($query = "", $params = []) {
         try {
             $stmt = $this->connection->prepare($query);
             if ($stmt === false) {
-                throw new Exception("Unable to prepare delete statement: " . $query);
+                throw new Exception("Unable to prepare statement: " . $query);
             }
 
             $stmt->execute($params);

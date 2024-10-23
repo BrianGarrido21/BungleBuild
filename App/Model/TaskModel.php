@@ -1,173 +1,86 @@
-<?php 
+<?php
 
-class TaskModel{
-    private $task_id;
-    private $nif;
-    private $contact_name;
-    private $contact_phone;
-    private $description;
-    private $contact_email;
-    private $address;
-    private $city;
-    private $postal_code;
-    private $province_code;
-    private $status;
-    private $created_at;
-    private $assigned_worker;
-    private $completion_date;
-    private $pre_notes;
-    private $post_notes;
-    private $sumary_file;
-    private $img_file;
+class TaskModel implements Paginator {
 
-    public function __construct($data) {
-        $this->task_id = $data['task_id'];
-        $this->nif = $data['nif'];
-        $this->contact_name = $data['contact_name'];
-        $this->contact_phone = $data['contact_phone'];
-        $this->description = $data['description'];
-        $this->contact_email = $data['contact_email'];
-        $this->address = $data['address'];
-        $this->city = $data['city'];
-        $this->postal_code = $data['postal_code'];
-        $this->province_code = $data['province_code'];
-        $this->status = $data['status'];
-        $this->created_at = $data['created_at'];
-        $this->assigned_worker = $data['assigned_worker'];
-        $this->completion_date = $data['completion_date'];
-        $this->pre_notes = $data['pre_notes'];
-        $this->post_notes = $data['post_notes'];
-        $this->sumary_file = $data['sumary_file'];
-        $this->img_file = $data['img_file'];
+    private $db;
+    private $table = 'tasks';  // Nombre de la tabla de tareas
+
+    public function __construct() {
+        $this->db = Database::getInstance();
+        $this->db->setTable($this->table); 
     }
 
-    // Métodos getters para acceder a los datos de la tarea
-    public function getTaskId() {
-        return $this->task_id;
+    // Crear una nueva tarea
+    public function createTask($data) {
+        return $this->db->insert($data);
     }
 
-    public function getNif() {
-        return $this->nif;
+    // Obtener tarea por ID
+    public function getTaskById($task_id) {
+        return $this->db->select()->where('task_id = ?', [$task_id])->get();
     }
 
-    public function getContactName() {
-        return $this->contact_name;
+    // Actualizar una tarea por ID
+    public function updateTask($task_id, $data) {
+        return $this->db->update($data)->where('task_id = ?', [$task_id])->execute();
     }
 
-    public function getContactPhone() {
-        return $this->contact_phone;
+    // Eliminar una tarea por ID
+    public function deleteTask($task_id) {
+        return $this->db->delete()->where('task_id = ?', [$task_id])->execute();
     }
 
-    public function getDescription() {
-        return $this->description;
+    // Obtener todas las tareas
+    public function getAllTasks() {
+        return $this->db->select()->get();
     }
 
-    public function getContactEmail() {
-        return $this->contact_email;
+    // Obtener tareas con paginación (Implementación de la interfaz)
+    public function getPaginatedResults($itemsPerPage, $currentPage) {
+        $offset = ($currentPage - 1) * $itemsPerPage;
+        return $this->db->select()->limit($itemsPerPage, $offset)->get();
     }
 
-    public function getAddress() {
-        return $this->address;
+    // Contar el número total de tareas (Implementación de la interfaz)
+    public function getTotalItems() {
+        $result = $this->db->select('COUNT(*) as total')->get();
+        return $result[0]['total'];
     }
 
-    public function getCity() {
-        return $this->city;
+    // Obtener el número total de páginas (Implementación de la interfaz)
+    public function getTotalPages($itemsPerPage) {
+        $totalItems = $this->getTotalItems();
+        return ceil($totalItems / $itemsPerPage);
     }
 
-    public function getPostalCode() {
-        return $this->postal_code;
+    // Obtener la página actual (Implementación de la interfaz)
+    public function getCurrentPage() {
+        return isset($_GET['page']) ? (int) $_GET['page'] : 1;
     }
 
-    public function getProvinceCode() {
-        return $this->province_code;
+    // Obtener el número de elementos por página (Implementación de la interfaz)
+    public function getItemsPerPage() {
+        return isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
     }
 
-    public function getStatus() {
-        return $this->status;
+    // Determinar si hay una página anterior (Implementación de la interfaz)
+    public function hasPreviousPage($currentPage) {
+        return $currentPage > 1;
     }
 
-    public function getCreatedAt() {
-        return $this->created_at;
+    // Determinar si hay una página siguiente (Implementación de la interfaz)
+    public function hasNextPage($currentPage, $itemsPerPage) {
+        return $currentPage < $this->getTotalPages($itemsPerPage);
     }
 
-    public function getAssignedWorker() {
-        return $this->assigned_worker;
+    // Obtener tareas por estado
+    public function getTasksByStatus($status) {
+        return $this->db->select()->where('status = ?', [$status])->get();
     }
 
-    public function getCompletionDate() {
-        return $this->completion_date;
-    }
-
-    public function getPreNotes() {
-        return $this->pre_notes;
-    }
-
-    public function getPostNotes() {
-        return $this->post_notes;
-    }
-
-    public function getSumaryFile() {
-        return $this->sumary_file;
-    }
-
-    // Métodos setters para modificar los datos de la tarea si es necesario
-    public function setNif($nif) {
-        $this->nif = $nif;
-    }
-
-    public function setContactName($contact_name) {
-        $this->contact_name = $contact_name;
-    }
-
-    public function setContactPhone($contact_phone) {
-        $this->contact_phone = $contact_phone;
-    }
-
-    public function setDescription($description) {
-        $this->description = $description;
-    }
-
-    public function setContactEmail($contact_email) {
-        $this->contact_email = $contact_email;
-    }
-
-    public function setAddress($address) {
-        $this->address = $address;
-    }
-
-    public function setCity($city) {
-        $this->city = $city;
-    }
-
-    public function setPostalCode($postal_code) {
-        $this->postal_code = $postal_code;
-    }
-
-    public function setProvinceCode($province_code) {
-        $this->province_code = $province_code;
-    }
-
-    public function setStatus($status) {
-        $this->status = $status;
-    }
-
-    public function setAssignedWorker($assigned_worker) {
-        $this->assigned_worker = $assigned_worker;
-    }
-
-    public function setCompletionDate($completion_date) {
-        $this->completion_date = $completion_date;
-    }
-
-    public function setPreNotes($pre_notes) {
-        $this->pre_notes = $pre_notes;
-    }
-
-    public function setPostNotes($post_notes) {
-        $this->post_notes = $post_notes;
-    }
-
-    public function setSumaryFile($sumary_file) {
-        $this->sumary_file = $sumary_file;
+    // Asignar un operario a una tarea
+    public function assignWorker($task_id, $worker_id) {
+        return $this->db->update(['assigned_worker' => $worker_id])
+                        ->where('task_id = ?', [$task_id])->execute();
     }
 }

@@ -1,62 +1,98 @@
-<?php 
-class UserModel {
+<?php
 
-    private $user_id;
-    private $name;
-    private $email;
-    private $password;
-    private $rol;
-    private $created_at;
+class UserModel implements Paginator {
 
-    public function __construct($data) {
-        $this->user_id = $data['user_id'];
-        $this->name = $data['name'];
-        $this->email = $data['email'];
-        $this->password = $data['password'];
-        $this->rol = $data['rol'];
-        $this->created_at = $data['created_at'];
+    private $db;
+    private $table = 'users';
+
+    public function __construct() {
+        $this->db = Database::getInstance();
+        $this->db->setTable($this->table);
     }
 
-
-    // Métodos getters para acceder a los datos del usuario
-    public function getUserId() {
-        return $this->user_id;
+    // Método para registrar un usuario
+    public function registerUser($data) {
+        try {
+            return $this->db->insert($data);
+        } catch (Exception $e) {
+            error_log("Error to register user: " . $e->getMessage());
+            return false;
+        }
     }
 
-    public function getName() {
-        return $this->name;
+    // Método para autenticar un usuario
+    public function authenticateUser($data) {
+        try {
+            $user = $this->db->select()->where('email = ?', [$data['email']])->get();
+            if ($user && password_verify($data['password'], $user['password'])) {
+                return $user;
+            }
+            return false;
+        } catch (Exception $e) {
+            error_log("Error to authenticate user: " . $e->getMessage());
+            return false;
+        }
     }
 
-    public function getEmail() {
-        return $this->email;
+    // Implementación del método para obtener usuarios con paginación
+    public function getPaginatedResults($itemsPerPage, $currentPage) {
+        $offset = ($currentPage - 1) * $itemsPerPage;
+        return $this->db->select()->limit($itemsPerPage, $offset)->get();
     }
 
-    public function getPassword() {
-        return $this->password;
+    // Implementación del método para contar el número total de usuarios
+    public function getTotalItems() {
+        $result = $this->db->select('COUNT(*) as total')->get();
+        return $result[0]['total'];
     }
 
-    public function getRol() {
-        return $this->rol;
+    // Implementación del método para obtener el número total de páginas
+    public function getTotalPages($itemsPerPage) {
+        $totalItems = $this->getTotalItems();
+        return ceil($totalItems / $itemsPerPage);
     }
 
-    public function getCreatedAt() {
-        return $this->created_at;
+    // Implementación del método para obtener la página actual
+    public function getCurrentPage() {
+        return isset($_GET['page']) ? (int) $_GET['page'] : 1;
     }
 
-    // Métodos setters para modificar los datos del usuario si es necesario
-    public function setName($name) {
-        $this->name = $name;
+    // Implementación del método para obtener el número de elementos por página
+    public function getItemsPerPage() {
+        return isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
     }
 
-    public function setEmail($email) {
-        $this->email = $email;
+    // Implementación del método para determinar si hay una página anterior
+    public function hasPreviousPage($currentPage) {
+        return $currentPage > 1;
     }
 
-    public function setPassword($password) {
-        $this->password = $password;
+    // Implementación del método para determinar si hay una página siguiente
+    public function hasNextPage($currentPage, $itemsPerPage) {
+        return $currentPage < $this->getTotalPages($itemsPerPage);
     }
 
-    public function setRol($rol) {
-        $this->rol = $rol;
+    // Otros métodos de UserModel
+    public function updateUser($data) {
+        try {
+            return $this->db->update([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+                'rol' => $data['rol']
+            ])->where('user_id = ?', [$data['user_id']])->execute();
+        } catch (Exception $e) {
+            error_log("Error to update the user: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function deleteUser($user_id) {
+        try {
+            return $this->db->delete()->where('user_id = ?', [$user_id])->execute();
+        } catch (Exception $e) {
+            error_log("Error to delete the user: " . $e->getMessage());
+            return false;
+        }
     }
 }
