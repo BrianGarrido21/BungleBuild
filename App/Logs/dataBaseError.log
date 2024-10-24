@@ -1,3 +1,7 @@
 Execution error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'pepe' in 'field list'
 Execution error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'pepe' in 'field list'
 Execution error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'pepe' in 'field list'
+Insert error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'bunglebuild.tasks' doesn't exist
+Insert error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'bunglebuild.tasks' doesn't exist
+Insert error: SQLSTATE[22001]: String data, right truncated: 1406 Data too long for column 'postal_code' at row 1Execution error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 1
+Execution error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 1

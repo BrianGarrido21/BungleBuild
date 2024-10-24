@@ -15,7 +15,7 @@ class UserModel implements Paginator {
         try {
             return $this->db->insert($data);
         } catch (Exception $e) {
-            error_log("Error to register user: " . $e->getMessage());
+            error_log("Error to register user: " . $e->getMessage()."\n");
             return false;
         }
     }
@@ -29,7 +29,7 @@ class UserModel implements Paginator {
             }
             return false;
         } catch (Exception $e) {
-            error_log("Error to authenticate user: " . $e->getMessage());
+            error_log("Error to authenticate user: " . $e->getMessage())."\n";
             return false;
         }
     }

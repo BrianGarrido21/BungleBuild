@@ -52,10 +52,10 @@
     <label for="status">Task Status:</label>
     <select id="status" name="status">
         <option value="">Select one</option>
-        <option value="B" <?php echo (old('status') == 'B') ? 'selected' : ''; ?>>B - Waiting for approval</option>
-        <option value="P" <?php echo (old('status') == 'P') ? 'selected' : ''; ?>>P - Pending</option>
-        <option value="R" <?php echo (old('status') == 'R') ? 'selected' : ''; ?>>R - Completed</option>
-        <option value="C" <?php echo (old('status') == 'C') ? 'selected' : ''; ?>>C - Cancelled</option>
+        <option value="B" <?php echo selected('status','B') ?>>B - Waiting for approval</option>
+        <option value="P" <?php echo selected('status','P') ?>>P - Pending</option>
+        <option value="R" <?php echo selected('status','R') ?>>R - Completed</option>
+        <option value="C" <?php echo selected('status','C') ?>>C - Cancelled</option>
     </select><br>
     <?php if ($_POST && $errorHandler->hasError('status')) echo $errorHandler->getFormattedError('status'); ?>
     <br>

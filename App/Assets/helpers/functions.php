@@ -1,11 +1,19 @@
 <?php 
 
 
-    function old($field) {
+    function old($field, $data = []) {
+        // Verificar primero si hay datos del controlador
+        if (isset($data[$field])) {
+            return htmlspecialchars($data[$field], ENT_QUOTES, 'UTF-8');
+        }
+
+        // Si no, revisar el $_POST (en caso de errores)
         return isset($_POST[$field]) ? htmlspecialchars($_POST[$field], ENT_QUOTES, 'UTF-8') : '';
     }
 
-
+    function selected($field, $data) {
+        return (old($field) == $data) ? 'selected' : '';
+    }
         
     function validDniCifNie($dni){
         $cif = strtoupper($dni);

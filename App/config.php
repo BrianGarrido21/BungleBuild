@@ -13,7 +13,8 @@ define('ROOT_PATH', __DIR__ . '/');
 define('ASSETS_PATH', ROOT_PATH . 'Assets/');
 define('CONTROLLER_PATH', ROOT_PATH . 'Controller/');
 define('MODEL_PATH', ROOT_PATH . 'Model/');
-define('VIEW_PATH', ROOT_PATH . 'View/');
+define('VIEW_PATH', ROOT_PATH . 'View/'); 
+define('DOCS_PATH', ROOT_PATH . 'Docs/'); 
 
 // Configuración del modo de depuración
 define('DEBUG', true);

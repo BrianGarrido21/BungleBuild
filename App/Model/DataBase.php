@@ -32,7 +32,7 @@ class Database {
     public function setTable($table) {
         // Asignar el nombre de la tabla a la propiedad table
         $this->table = $table;
-        return $this;  // Retornamos $this para permitir el encadenamiento de métodos
+        return $this; 
     }
 
     // Evitar que la clase sea clonada
@@ -133,21 +133,17 @@ class Database {
     // Metodo limit para limitar los resultados de database
     
     public function limit($limit, $offset = 0) {
-        if (!$this->selectExecuted){
+        if (!$this->selectExecuted) {
             throw new Exception("You must call select()");
-        }else{
-        // Validar los valores de limit y offset como enteros
-        $limit = intval($limit);
-        $offset = intval($offset);
+        } else {
+            // Validar los valores de limit y offset como enteros
+            $limit = intval($limit);
+            $offset = intval($offset);
     
-        // Añadimos el LIMIT y OFFSET a la consulta
-        $this->query .= " LIMIT :limit OFFSET :offset";
+            // Añadimos el LIMIT y OFFSET a la consulta directamente como números enteros
+            $this->query .= " LIMIT $limit OFFSET $offset";
     
-        // Guardamos los parámetros limit y offset
-        $this->params['limit'] = $limit;
-        $this->params['offset'] = $offset;
-    
-        return $this;
+            return $this;
         }
     }
 

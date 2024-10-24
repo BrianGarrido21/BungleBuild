@@ -15,7 +15,7 @@ class ErrorHandler {
     }
 
     // Método para registrar un error para un campo específico.
-    public function recordError($field, $description){
+    public function addError($field, $description){
         $this->errors[$field] = $description;
     }
 

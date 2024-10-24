@@ -2,7 +2,6 @@
 
 interface Paginator {
 
-
     public function getPaginatedResults($itemsPerPage, $currentPage);
     
     public function getTotalItems();
